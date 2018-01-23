@@ -1,0 +1,97 @@
+body {
+  background-color: darkgreen;
+}
+
+
+.board {
+  /*background-color: tan;*/
+  /*border: 1px solid SaddleBrown;*/
+}
+
+.highlight {
+  opacity: 0.2;
+  background-color: brown;
+}
+
+.piece {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40;
+  width: 40;
+  margin: auto;
+}
+
+.face {
+  height: 60px;
+  width: 60px;
+}
+
+.menu {
+  list-style-type: none;
+  font-family: sans-serif;
+}
+
+.game-selection {
+  font-size: 80px;
+}
+
+.game-icon {
+  height: 1em;
+  width: 1em;
+  float: left;
+}
+
+.game-label {
+  margin-left: 10px;
+  text-decoration: none;
+}
+
+a:link {
+    color: black;
+}
+
+/* visited link */
+a:visited {
+    color: black;
+}
+
+/* mouse over link */
+a:hover {
+    color: grey;
+}
+
+/* selected link */
+a:active {
+    color: white;
+}
+
+#bigchess {
+  height: 804px;
+  width: 804px;
+}
+
+#blurb-images {
+  display: none;
+}
+
+#blurb-image {
+  display: inline-block;
+}
+
+#blurb {
+  font-family: sans-serif;
+/*  font-size: 2em;*/
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 1em;
+  display: inline-block;
+}
+
+#gomoku-board {
+  height: 386px;
+  width: 386px;
+}
