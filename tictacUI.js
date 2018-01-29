@@ -1,6 +1,6 @@
-$('#tictac').ready(function() {
+$(document).ready(function() {
 
-  tictac();
+  ticTacUI();
   
 });
 
@@ -8,7 +8,7 @@ const BoardTrans = [[6, 1, 8], [7, 5, 3], [2, 9, 4]]
 const BoardRevTrans = [[-1, -1], [0, 1], [2, 0], [1, 2], [2, 2], [1, 1], [0, 0], [1, 0], [0, 2], [2, 1]]
 
 
-var tictac = function() {
+var ticTacUI = function() {
   game = new Game();
 
   // Handle click on piece or grid
@@ -41,40 +41,33 @@ var tictac = function() {
   // Submit player move to server and get AI response
   var submitMove = function(move) {
     // Perform Ajax call to submit move to server
-    var done = false;
-      $.ajax({
-        method: "post",
-        url: "tictac/drop",
-        data: { move: move }
-      })
-      .done(function(response){
-        computerMove(response)
-      })
-      .fail(function(response){
-        alert("Can't make that move!");
-      })
+    if(ticTacAI.makeMove(move)) {
+      computerMove();
+    }
+    else {
+      alert("Can't make that move!");
+    }
   }
 
-  var computerMove = function(response) {
-    console.log(response);
-    move = response.move;
-    winner = response.winner;
-    if(winner == "player") {
+  var computerMove = function() {
+    if(ticTacAI.lost(ticTacAI.state)) {
       updateBlurb("You win!");
       updateFace("anguished");
     }
-    else if(winner == "cat") {
+    else if(ticTacAI.done(ticTacAI.state)) {
       updateBlurb("Cat's game!  Refresh to play again.");
       updateFace("smiling");
 
     }
     else {
       // Make computer move
+      var move = ticTacAI.computerMove()
+      ticTacAI.makeMove(move);
       var coord = spaceToCoordinates(move);
       var destination = gameBoard.cellByCoordinates(coord[0], coord[1]);
       gameBoard.addPiece(destination.id, o);
       // Check to see whether computer has won
-      if(winner == "computer") {
+      if(ticTacAI.lost(ticTacAI.state)) {
         updateBlurb("I win!");
         updateFace("smiling");
       }
@@ -109,3 +102,5 @@ var tictac = function() {
 
 
 }
+
+

@@ -128,9 +128,10 @@ module Minimaxable
       @depth -= 1
     end
     # Add score to master list and return it
-    if best_score == @max_score || best_score == -@max_score
+    # TO DO:  Should index using Zobrist hash rather than state
+    # if best_score == @max_score || best_score == -@max_score
       @state_scores[state] = best_score
-    end
+    # end
     best_score
   end
 end

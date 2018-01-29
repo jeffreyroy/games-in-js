@@ -1,4 +1,4 @@
-// Game class
+// Game UI class
 // Contains functions to allow pieces to be dragged and dropped
 // Functions must be customized for a particular game.
 
