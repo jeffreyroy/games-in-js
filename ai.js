@@ -17,8 +17,8 @@ function GameAI(position, maxDepth) {
   this.maxDepth = maxDepth || 10; // Default max depth of 10
   this.maxScore = 100;
   this.stateScores = [];
+  this.zobrist = [];
 }
-
 
 /// 1. Methods common to all games
 // Customize for specific game as necessary
@@ -208,6 +208,39 @@ GameAI.prototype.score = function(state) {
   // Q:  always add score?
   this.stateScores[this.stateHash(state)] = bestScore;
   return bestScore;
+}
+
+/// 5. Zobrist hash function
+
+// Create array of random values.  Note:  This version uses
+// 32 bit integers, may not be enough for games like chess
+GameAI.prototype.zobristArray = function(numberOfPieces, numberOfLocations) {
+  var zobrist = new Uint32Array(numberOfPieces * numberOfLocations) // pieces * colors * fields * 64/32
+  for (var i=0; i<zobrist.length; i++)
+    zobrist[i] = Math.random() * 4294967296;
+  return zobrist;
+}
+
+// Get Zobrist hash value of position
+// zobrist = zobrist array
+// pieceArray = array containing piece symbols, including blank space
+// positionString = array representing board position, using symbols to
+//  represent pieces
+GameAI.prototype.zobristHash = function(zobrist, pieceArray, positionArray) {
+  var hash = 0;
+  // Loop over all spaces on board
+  for(var i=0; i<positionArray.length; i++) {
+    // Find piece on current space
+    var c = positionArray[i];
+    var piece = pieceArray.indexOf(c);
+    // Get zobrist number corresponding to piece at that position
+    var n = zobrist[i * pieceArray.length + piece]
+    if(piece) {
+      // XOR hash with zobrist number
+      hash ^= n;
+    }
+  }
+  return hash;
 }
 
 /// 5. Driver code for node test
