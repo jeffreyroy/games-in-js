@@ -1,3 +1,6 @@
+// User interface for Annuvin
+// Requires annuvinAI.js
+
 // Page-specific ready function
 $('#annuvin').ready(function() {
 
@@ -32,6 +35,11 @@ var annuvin = function() {
   // Handle click on a movable piece
   var clickPiece = function(piece) { 
     console.log("clicked on piece " + piece.id);
+    if(!annuvinAI.state.player == 0)
+    { 
+      alert ("It's not your move!");
+      return false;
+    }
     var loc = location(piece);
     data = { move: [loc[1], loc[0]] };
     // If clicking on active piece
@@ -41,7 +49,7 @@ var annuvin = function() {
 
       }
       // Otherwise clear active piece
-      else {
+      else if(!annuvinAI.state.movingPiece) {
         game.activePiece = null;
         unHighlightTargets();
         updateBlurb("Click on a piece to move.");
@@ -53,36 +61,31 @@ var annuvin = function() {
       game.activePiece = piece;
       highlightTargets(piece);
       updateBlurb("Click on highlighted space to move.");
-
     }
 
   }
 
   // get list of valid targets from server
   highlightTargets = function(piece) {
+    // Find location of piece
     var loc = location(piece.parentElement);
-    // // Convert to smaller board used by server
-    // loc[1] -= 2;
-
-    data = { move: [loc[1], loc[0]] };
+    // Note: reverse coordinates because UI and AI
+    // use different order (need to fix this)
+    loc.reverse();
     console.log("That piece seems to be at: " + loc);
-    // Perform Ajax call to get list of legal moves from server
-    $.ajax({
-      method: "post",
-      url: "annuvin/click",
-      data: data
-    })
-    .done(function(response){
-      targetList = response.moves;
+    var s = annuvinAI.state;
+    // Get list of legal moves for that piece
+    var moves = annuvinAI.getMoves(s, loc, annuvinAI.totalMoves(s), false);
+    console.log(moves);
+    if(moves.length > 0) {
       // Highlight targets
-      for(i in targetList) {
-        target = gameBoard.cellByCoordinates(targetList[i][1], targetList[i][0]);
+      for(var i=0; i<moves.length; i++) {
+        // Need to reverse coordinates again - fix this!
+        var target = gameBoard.cellByCoordinates(moves[i][1][1], moves[i][1][0]);
         target.classList.add("highlight");
       }
-    })
-    .fail(function(response){
-      alert("Can't get move for that piece!");
-    })
+    }
+    else alert("Can't get move for that piece!");
   }
 
   // Remove all highlighting from game board
@@ -101,56 +104,53 @@ var annuvin = function() {
     piece = game.activePiece;
     // Make sure a piece is ready to move
     if(piece && cell.classList.contains("highlight")) {
-      var from = location(piece.parentElement);
-      var to = location(cell);
+      // Reverse coordinates - need to fix this!
+      var from = location(piece.parentElement).reverse();
+      var to = location(cell).reverse();
  
-      console.log("You seem to be moving from " + data.from + " to " + data.to);
+      console.log("You seem to be moving from " + from + " to " + to);
       updateBlurb("Thinking...");
       unHighlightTargets();
       movePiece(piece, cell);
-      game.activePiece = null;
-      // Perform Ajax call to submit move to server
-      submitMove(from, to, false);
+
+      // Make move
+      annuvinAI.makeMove([from, to]);
       // Check to see whether either player has won
       checkForWin();
-
+      // If player's move is over, get ai response
+      if (annuvinAI.state.movingPiece) {
+        highlightTargets(piece);
+      }
+      else
+      {
+        game.activePiece = null;
+        // Delay starting tree search to allow DOM update
+        setTimeout(getResponse, 50);
+      }
     }
   }
 
-  // Submit player move to server and get AI response
-  var submitMove = function(from, to, cont) {
-    data = { from: [from[1], from[0]], to: [to[1], to[0]] };
-    // Perform Ajax call to submit move to server
-    var done = false;
-      $.ajax({
-        method: "post",
-        url: "annuvin/drop",
-        data: { move: data, cont: cont }
-      })
-      .done(function(response){
-        console.log(response);
-        move = response.move;
-        cont = response.cont;
-        // Check whether it is the computer's move
-        if(move[0][0] != -1) {
-          // Make computer move
-          from = gameBoard.cellByCoordinates(move[0][1], move[0][0]);
-          to = gameBoard.cellByCoordinates(move[1][1], move[1][0]);
-          updateBlurb("I move from " + from.id + " to " + to.id + ".");
-          piece = from.firstChild;
-          movePiece(piece, to);
-          // Continue making additional moves for computer if possible
-          if(cont) {
-            submitMove(from, to, true);
-          }
-        }
-        // Check to see whether either player has won
-        checkForWin();
-      })
-      .fail(function(response){
-        alert("Can't make that move!");
-      })
+  // var submitMove = function(move) {
+  //     annuvinAI.makeMove(move);
 
+  // }
+
+  // Get AI response
+  var getResponse = function() {
+    console.log("My turn!");
+    var move = annuvinAI.computerMove();
+    annuvinAI.makeMove(move);
+    var from = gameBoard.cellByCoordinates(move[0][1], move[0][0]);
+    var to = gameBoard.cellByCoordinates(move[1][1], move[1][0]);
+    updateBlurb("I move from " + from.id + " to " + to.id + ".");
+    piece = from.firstChild;
+    movePiece(piece, to);
+    // Continue making additional moves for computer if possible
+    if(annuvinAI.state.movingPiece) {
+      // Delay starting tree search to allow DOM update
+      setTimeout(getResponse, 200);
+    }
+    checkForWin();
   }
 
   var location = function(cell) {

@@ -1,5 +1,16 @@
 // Minimax AI library
 
+// Helper function to find array within array
+Array.prototype.includesArray = function(arr) { 
+  result = this.filter(e => e.join() == arr.join());
+  return result.length > 0;
+}
+
+// Helper function to make deep copy of 2d array
+Array.prototype.deepCopy = function() { 
+  return this.map(e => e.slice());
+}
+
 // Class for minimax AI
 // maxDepth = maximum depth of search tree
 function GameAI(position, maxDepth) {
@@ -37,11 +48,12 @@ GameAI.prototype.opponent = function(player) {
 
 // Make a move and update the state
 GameAI.prototype.makeMove = function(move) {
-  // If move is illegal, return false
-  if(!this.legalMoves(this.state).includes(move)) { return false; }
-  // Otherwise, make the move
-  this.state = this.nextState(this.state, move);
-  return true;
+  // If move is legal, make it
+  if(this.legalMoves(this.state).includesArray(move)) { 
+    this.state = this.nextState(this.state, move);
+    return true;
+  }
+  else return false;
 }
 
 // Choose move for computer using minimax
@@ -134,7 +146,6 @@ GameAI.prototype.displayMove = function(move) {
 /// 5. Minimax AI
 
 GameAI.prototype.bestMoveWithScore = function(state) {
-  var position = state.position;
   var player = state.player;
   var moves = this.legalMoves(state);
   // If no legal moves, return null move
@@ -177,7 +188,6 @@ GameAI.prototype.bestMove = function(state) {
 
 // Return score for state (i.e. value to player on the move)
 GameAI.prototype.score = function(state) {
-  var position = state.position;
   var bestScore = 0;
   // If already scored, return score
   var storedScore = this.stateScores[this.stateHash(state)];
